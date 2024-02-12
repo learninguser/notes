@@ -16,7 +16,6 @@
   ```
 
 - **WORKDIR**:
-  - When we add the instruction
   
   ```Dockerfile
   FROM almalinux:8
@@ -37,7 +36,7 @@
   FROM almalinux:${version}
   ```
 
-  - ARG variable before FROM version, can only be used for FROM instruction only
+  - If ARG variable is defined before FROM version, it can be used only for FROM instruction only
   - In this case, we should pass the value to the variable from the terminal: `docker build -t arg:v1 --build-arg version=9 .`
   - We can also specify default values to the arguments using `:-8` as follows:
 
@@ -47,15 +46,30 @@
   ```
 
   - In this case, if the user doesn't provide a value at the build time almalinux v8 will be installed by default
-  - Difference between **ARG** and **ENV**: ARG varaibles will work only at build time whereas ENV variables can work at build and runtime as well
-  - If we want to pass the ARG variables to the ENV variables, we can do it as follows:
+  - **Difference between ARG and ENV**: ARG variables will work only at build time whereas ENV variables can work at build and runtime as well
+  - Therefore, the best way is to use a combination of both i.e. we can pass values to the ENV variables using ARG variables as follows:
 
   ```Dockerfile
   ARG version
   FROM almalinux:${version}
   ARG COURSE
   ENV COURSE=${COURSE}
+  ARG TRAINER
+  ENV TRAINER=${TRAINER}
+  RUN echo "Course: ${COURSE}, Trainer: ${TRAINER}"
   ```
+
+  - We can pass the variables at build time using: `docker build -t arg:v1 --build-arg version=9 --build-arg COURSE=DevOps --build-arg TRAINER=Sivakumar .`
+  - Similarly we can also create a user at the container runtime
+
+  ```Dockerfile
+  FROM almalinux:8
+  ARG username
+  RUN useradd ${username}
+  USER ${username}
+  ```
+
+  - Now, we should build the image using: `docker build -t arg:v1 --build-arg username=pavan .`
 
 - **ONBUILD**:
   - Using this, we can add some instructions to the users who are using our build images

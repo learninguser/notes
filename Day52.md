@@ -6,9 +6,12 @@
   - `FROM almalinux:8`
 - **RUN**: To install the packages or configure the Base OS
   - **It runs at image creation**
-- **CMD**: To run the container
+- **CMD**: To run the container for infinite time
   - Without a CMD instruction, a container cannot be created
-- **LABEL**: These are useful for filtering purpose
+  - A command should run in the foreground, attached to the screen and then send it to the background
+- **LABEL**:
+  - These are useful for filtering purpose
+  - Adds metadata to the image
   
   ```Dockerfile
   FROM  almalinux:8
@@ -44,7 +47,8 @@
   COPY  index.html /usr/share/nginx/index.html
   ```
 
-- **ADD** is similar to **COPY** i.e. copy files from local machine to container but with 2 extra options
+- **ADD** is similar to **COPY** i.e. copy files from local machine to container
+- But ADD offers 2 extra options
   - Feature 1: It can fetch the content from internet
   - Feature 2: It can unzip the archive
 
@@ -55,7 +59,7 @@
   ADD  sample-1.tar /tmp/
   ```
 
-- **ENTRYPOINT**: It does the similar task as CMD
+- **ENTRYPOINT**: It does the similar task as CMD i.e. runs at the time of Container creation
 
   ```Dockerfile
   FROM almalinux:8
@@ -65,8 +69,8 @@
   ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
   ```
 
-- **CMD** instruction can be overridden whereas with **ENTRYPOINT** it is not possible to override
-- If we try to execute a command at the of running the container, it appends to the instruction in the ENTRYPOINT
+- **CMD** instruction can be **overridden** whereas with **ENTRYPOINT** it **cannot** be overridden
+- If we try to execute a command at the time of creating the container, it appends to the instruction in the ENTRYPOINT
 - Its always best to use a combination of both CMD and ENTRYPOINT
 
   ```Dockerfile
@@ -75,7 +79,7 @@
   ENTRYPOINT [ "ping", "-c5" ]
   ```
 
-- If the user is not providing any argument at container runtime, CMD append them to ENTRYPOINT
+- If the user is not providing any argument at container runtime, CMD appends the instructions to the ENTRYPOINT
 
 ## Push image to Docker Hub
 

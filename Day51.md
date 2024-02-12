@@ -48,9 +48,9 @@
 - To access the NGiNX running inside the container, we need to perform **port forwarding**
 - Command: `docker run -p <host-port>:<container-port> <image-id>`
   - But this command runs in the attached mode i.e. foreground
-  - To run it in background: `docker run -p -d <host-port>:<container-port> <image-id>`
+  - To run it in background: `docker run -d -p <host-port>:<container-port> <image-id>`
 - To enter into the container: `docker exec -it <container-id> <command>`
-- To name a container: `docker run -p --name <name-of-the-container> -d <host-port>:<container-port> <image-id>`
+- To name a container: `docker run -d --name <name-of-the-container> -p <host-port>:<container-port> <image-id>`
 - To check the logs of the container: `docker logs <container-id>`
 
 ## How to create our own Docker Images
@@ -59,14 +59,21 @@
 - Using this we can build images and push them to a repository
 - **FROM**: Fetch the Base OS
   - `FROM almalinux:8`
+  - This should be the first instruction in the Dockerfile
 - To build a docker image: `docker build -t <image-name>:<version> .`
 - **RUN**: To install the packages or configure the Base OS
   - `RUN yum install nginx -y`
-  - **It runs at image creation**
+  - It runs at the time of **image creation**
 - **CMD**: To run the container
-  - It runs only at container creation
+  - It runs only at time of container creation
   - A Dockerfile can have multiple RUN instructions but only ONE CMD instruction
-  - **systemctl** commands are not present in container
+  - systemctl commands **will not work** in container as every container is a process on its own
   - `CMD [ "nginx", "-g", "daemon off;" ]`: To start the NGiNX as a service in the container
     - Using `daemon off`, the container runs in the foreground
   - Without a CMD instruction, a container cannot be created
+
+## Where can we store our Docker images?
+
+- Dockerhub
+- ECR: Elastic Container Registry which is a service from ECR
+- Nexus Docker Registry
