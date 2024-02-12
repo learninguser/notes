@@ -113,38 +113,71 @@ COPY roboshop.conf /etc/nginx/nginx.conf
 - We can use the official Mongo image
 - By default docker can initialise and load the .js files that are present inside the `/docker-entrypoint-initdb.d/` directory
 
-`roboshop-docker/catalogue/Dockerfile`
+  `roboshop-docker/mongodb/Dockerfile`
 
-```Dockerfile
-FROM mongo:5
-COPY *.js /docker-entrypoint-initdb.d/
-```
+  ```Dockerfile
+  FROM mongo:5
+  COPY *.js /docker-entrypoint-initdb.d/
+  ```
+
+- We can build the image using: `docker build -t mongodb:v1 .`
+- Once the image is build, we can use: `docker run -d --name mongodb mongodb:v1` to create the container
+- Once the container is created, we can check the logs using: `docker logs mongodb`
+
+  ```text
+  {"t":{"$date":"2024-02-12T16:40:32.558+00:00"},"s":"I",  "c":"NETWORK",  "id":23016,   "ctx":"listener","msg":"Waiting for connections","attr":{"port":27017,"ssl":"off"}}
+  ```
+
+- If we see an output similar to the above with the message: `"Waiting for connections"`, it means its working perfectly fine.
 
 ### Catalogue
 
 - We just need 2 files i.e. `package.json` and `server.js` to build the catalogue image
 
-`roboshop-docker/catalogue/Dockerfile`
+  `roboshop-docker/catalogue/Dockerfile`
 
-```Dockerfile
-FROM node:14
-EXPOSE 8080
-WORKDIR /opt/server
-COPY package.json .
-COPY server.js .
-RUN npm install
-ENV MONGO=true
-CMD ["node", "server.js"]
-```
+  ```Dockerfile
+  FROM node:14
+  EXPOSE 8080
+  WORKDIR /opt/server
+  COPY package.json .
+  COPY server.js .
+  RUN npm install
+  ENV MONGO=true
+  CMD ["node", "server.js"]
+  ```
+
+- We can build the image using: `docker build -t catalogue:v1 .`
+- Once the image is build, we can use: `docker run -d --name catalogue catalogue:v1` to create the container
+- Once the container is created, we can check the logs using: `docker logs catalogue`
+- When we check the logs, we got the following message:
+
+  ```text
+  {"level":"error","time":1707776727871,"pid":1,"hostname":"e20bf67a46d8","msg":"ERROR {\"name\":\"MongoNetworkError\"}","v":1}
+  ```
+
+- This means catalogue component is unable to communicate with MongoDB
 
 ## Docker Networking
 
+- **docker0** network interface is created by default at the time of docker installation
+- When we inspect both the containers, we see that the docker0 has assigned:
+  - 172.17.0.2 to MongoDB
+  - 172.17.0.3 to Catalogue
+  - Gateway IP of 172.17.0.1
+- Disadvantage with default bridge network i.e. eth0 is: containers cannot communicate with each other i.e. with names
 - There are 2 kinds of networks that Docker offers
   - Host
   - Bridge (default)
-- **docker0** network interface is created by default at the time of docker installation
-- Disadvantage with default bridge network i.e. eth0 is:
-  - The docker containers cannot communicate with each other i.e. with names
 - Therefore we need to create our own network
 - This can be done using: `docker network create roboshop`
-- To create docker containers with a network: `docker run -d --name mongodb --network=roboshop mongodb:v1`
+- When we inspect this new network, a Gateway IP of 172.18.0.1 is assigned to it
+- To create docker containers with a network:
+  - For mongodb: `docker run -d --name mongodb --network=roboshop mongodb:v1`
+  - For catalogue:  `docker run -d --name catalogue --network=roboshop catalogue:v1`
+- As they both are in the same network, catalogue is able to communicate with MongoDB successfully as shown below:
+
+  ```text
+  {"level":"info","time":1707777534788,"pid":1,"hostname":"54753a9c85fe","msg":"Started on port 8080","v":1}
+  {"level":"info","time":1707777534798,"pid":1,"hostname":"54753a9c85fe","msg":"MongoDB connected","v":1}
+  ```
