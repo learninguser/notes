@@ -181,3 +181,18 @@ COPY roboshop.conf /etc/nginx/nginx.conf
   {"level":"info","time":1707777534788,"pid":1,"hostname":"54753a9c85fe","msg":"Started on port 8080","v":1}
   {"level":"info","time":1707777534798,"pid":1,"hostname":"54753a9c85fe","msg":"MongoDB connected","v":1}
   ```
+
+### Web component
+
+  `roboshop-docker/web/Dockerfile`
+
+  ```Dockerfile
+  FROM nginx
+  RUN rm -rf /usr/share/nginx/html/*
+  ADD static /usr/share/nginx/html/
+  COPY default.conf /etc/nginx/conf.d/default.conf
+  ```
+
+- As we are using the base image as nginx which is build using Debian OS and therefore it has a different file structure
+- If we login to the web container, we can observe that there is no `default.d` folder and instead it has `conf.d` with a different file format
+- Also we should only have default.conf file inside the `conf.d` directory
