@@ -3,7 +3,7 @@
 Date: 05-09-2023
 
 - If we check `ansible --version`, we can get the path to the Ansible configuration and it is present at `/etc/ansible/ansible.cfg`
-- Rather than passing the username and password inorder to connect to the server using command line, we can use configuration file `ansible.cfg` to serve this purpose
+- Rather than passing the username and password inorder to connect to the server using command line, we can use `ansible.cfg` configuration file to serve this purpose
 - To define an environment variable that is valid for a particular session, we use: `export`
 - To remove an environment variable, we use: `unset` command
 
@@ -14,12 +14,41 @@ Date: 05-09-2023
 
 ## Configuration precedence in Ansible
 
-1. ANSIBLE_CONFIG -> ENV variable using: `export ANSIBLE_CONFIG=/home/centos/test/ansible.cfg`
+1. ANSIBLE_CONFIG -> ENV variable:
+    - `export ANSIBLE_CONFIG=/home/centos/test/ansible.cfg`
+    - To unset the `ANSIBLE_CONFIG` variable: `unset ANSIBLE_CONFIG`
 2. Current working directory
 3. User home directory, it should be `.ansible.cfg`
-4. /etc/ansible/ansible.cfg
+4. `/etc/ansible/ansible.cfg`
 
-- Tags in Ansible can be used at any level i.e. Task level, play level etc
+- To generate an example `ansible.cfg` file with all the options, we can run: `ansible-config init --disabled > ansible.cfg`
+- For e.g.
+
+  `ansible.cfg`
+
+  ```cfg
+  [defaults]
+  inventory=inventory.ini
+  ansible_user=centos
+  ```
+
+- If we specify the password inorder for ansible to connect to the servers inside this file, it will not work
+- Rather we should define it inside `inventory.ini`
+
+  `inventory.ini`
+
+  ```ini
+  [catalogue]
+  catalogue.learninguser.shop
+  [all:vars]
+  ansible_password=DevOps321
+  ```
+
+- Now, when we want to run the playbook for catalogue component, we don't need to specify the username and password as its already present inside ansible.cfg file in the current directory
+- `ansible-playbook -e component=catalogue main.yaml`
+
+### Ansible tags
+
 - Tags are useful when re-running the playbook for e.g. when a  new release of the artifact is available
 - This way, we can specify which particular plays needs to be executed as show below
 
@@ -67,6 +96,7 @@ Date: 05-09-2023
   ```
 
 - To execute this playbook, we run the command: `ansible-playbook catalogue.yaml -t deployment` and the tasks that has the tag `deployment` will only be executed.
+- Tags in Ansible can be used at any level i.e. Task level, play level etc
 
 ## Inbuilt functions in Ansible
 
@@ -92,8 +122,8 @@ Date: 05-09-2023
 ## Facts in Ansible
 
 - Facts are the information that ansible collects at the time of execution
-- Using these facts, we can identify in which distribution is ansible executing the commands
-- This information is useful, we want to run the script in heterogeneous environment
+- For e.g. using these facts, we can identify in which distribution is ansible executing the commands
+- This information is useful, when we want to run the script in heterogeneous environment i.e. different OS flavours
 - Even though, we never have different OS, OS version, Packages and its versions, services and their status, directory, permissions, etc. in DEV and PROD environments
 
   `heterogenous/facts.yaml`
@@ -141,7 +171,7 @@ Date: 05-09-2023
 
 - This is necessary to fetch resources information from cloud providers such as AWS
 - To work with AWS EC2 plugin on ansible, the files should have `aws_ec2.yaml` extension
-- For example to fetch all the EC2 instances with the name web, we can use the following:
+- For example to fetch all the EC2 instances with the name `web`, we can use the following:
 
   `web.aws_ec2.yaml`
 
@@ -155,6 +185,48 @@ Date: 05-09-2023
   ```
 
 - To work with this, we should have `botocore` and `boto3` modules installed
-- Then we can run: `ansible-inventory -i web.aws_ec2.yaml --list` to fetch the list of web hosts
+- Then we can run: `ansible-inventory -i web.aws_ec2.yaml --list` to fetch the list of `web` hosts
 - Then to run a command on all the hosts, we can run: `ansible aws_ec2 -i web.aws_ec2.yaml -e ansible_user=centos -e ansible_password=DevOps321 -m ping`
 - We can use `%d` in vim to clear the file contents
+
+## Ansible Vault
+
+- So far passwords to the servers are being provided using commmand prompt or using `ansible.cfg` file which is insecure, rather we can use Ansible vault for this purpose
+- A vault is a storage of secrets
+- Encoding: A proper pattern to encode the text
+- Encryption: Encrypt a text using an algorithm + input password. For e.g. AES256
+- So far we have been passing values to the variables to the components that are part of a group i.e. web group using the inventory file
+- Instead we can also create a folder named `group_vars`
+- To create Ansible vault: `ansible-vault create </path/somename.yaml>`
+  - For e.g. `ansible-vault create group_vars/web.yaml`
+  - We should enter a password: For e.g. admin123
+- To edit the contents of the vault: `ansible-vault edit group_vars/web.yaml`
+
+  `vault/ansible.cfg`
+
+  ```cfg
+  [defaults]
+  inventory = inventory
+  ask_vault_pass = True
+  ```
+
+  `vault/inventory`
+
+  ```ini
+  [web]
+  web.learninguser.shop
+  ```
+
+  `vault/01-playbook.yaml`
+
+  ```yaml
+  - name: ping playbook
+    hosts: web
+    tasks:
+    - name: ping the server
+      ansible.builtin.ping:
+  ```
+
+- To use the same variables with values for all the groups, we use: `group_vars/all.yaml`
+- To encrypt an existing file, we use: `ansible-vault encrypt group_vars/all.yaml`
+- To view the contents of the encrypted vault file: `ansible-vault view group_vars/all.yaml`

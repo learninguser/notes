@@ -27,7 +27,7 @@ Date: 04-09-2023
 - When we want to replace a text with some other text, we can use placeholders using Jinja 2 syntax
 - To place the content in the content-holder, we use templates in Ansible as shown below and use `ansible.builtin.template` module to serve this purpose
 
-  `roles/web/templates/roboshop.conf`
+  `roles/web/templates/roboshop.conf.j2`
 
   ```conf
   proxy_http_version 1.1;
@@ -49,6 +49,15 @@ Date: 04-09-2023
   }
   ```
 
+  `roles/web/templates/roboshop.conf.j2`
+
+  ```yaml
+  - name: copy roboshop configuration
+    ansible.builtin.template:
+      src: roboshop.conf.j2
+      dest: /etc/nginx/default.d/roboshop.conf
+  ```
+
 - The values are fetched from `vars/main.yaml` file and used at the time of playbook execution
 
   `roles/web/vars/main.yaml`
@@ -60,6 +69,22 @@ Date: 04-09-2023
   CART_HOST: cart.joindevops.online
   PAYMENT_HOST: payment.joindevops.online
   ```
+
+- Or we can also define `variables.yaml` in main directory where `main.yaml` file is present and pass it to the `main.yaml` as shown below using `vars_files`
+
+  `variables.yaml`
+
+  ```yaml
+  - name: "install {{component}}"
+    hosts: "{{component}}"
+    vars_files:
+      - variables.yaml
+    become: yes
+    roles:
+      - "{{component}}"
+  ```
+
+## Handlers
 
 - If we want to trigger a function when ever there is change in a file, we can use **handlers** as shown below
 
