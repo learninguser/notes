@@ -84,3 +84,5 @@ metadata:
   - `kubectl apply`: When resource doesn't exist, it will create and if exists it updates or doesn't do anything
 - Therefore using `kubectl apply -f <filename>.yaml` is better than `kubectl create`
 - To delete a namespace: `kubectl delete -f <filename>.yaml`
+- `apiVersion` is used for categorizing the resources in kubernetes
+- We can get the list of resources using: `kubectl api-resources`
