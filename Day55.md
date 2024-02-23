@@ -8,9 +8,13 @@
 - There are 2 kinds of volumes:
   1. Unnamed volumes
   2. Named volumes
+
+### Unnamed volumes
+
 - We can mount a volume at the time of container creation itself using: `docker run -d -p 8080:80 -v <host-path>:<container-path> nginx`
 - Docker creates a temporary volume for storing the data of the container in `/var/lib/docker/overlay2` directory
 - These kind of volumes are said to be as unnamed volumes
+- This is not preferred usually as we need to manage it completely i.e. docker commands will not work to manage this volume type
 
 ### Named Volumes
 
@@ -43,7 +47,8 @@ services:
 ### Reduce Docker image size
 
 - Reduce the size of the docker image which can be done by using a smaller base image such as **alpine**
-- This concluison should only made after performing proper testing of the whole application
+- This conclusion should only made after performing proper testing of the whole application
+- With python based applications, just by changing the image will not work rather we need to also add commands to install necessary dependencies for the application to work properly
 
 ### Multi-stage build
 

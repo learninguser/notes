@@ -353,6 +353,8 @@ Date: 06-11-2023
 
 - Now that the pods are running, how can we allow users to access the application running inside the pod as we don't have any port mappings enabled ?
 - For this purpose, we can use **Services** in K8s i.e. we can we expose the deployed pods to the external users
+- The secrets information can be managed using the service available on the cloud platform
+- For e.g. SecretsManager on AWS can be used to manage these credentials
 
 ## K8s Services
 

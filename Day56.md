@@ -17,8 +17,8 @@
 ## Disadvantages
 
 - What happens if the Docker server is crashed?
-  - Application goes down
-- What happens if we have sudden increase in traffic?
+  - Application goes down + its associated data is also lost
+- What happens if we have sudden increase/decrease in traffic?
   - We have to run multiple containers manually
 - How to balance the load if we have multiple containers for a component e.g. cart ?
   - How to split the traffic?
@@ -26,9 +26,11 @@
   - Create a new container
 - How to handle configs and secrets?
   - No environment to store secrets and configs
+- What if we have multiple host running with containers? i.e. how can they communicate with them?
 
 ## Container Orchestration
 
+- To overcome above disadvantages, we can use an orchestrator
 - We need to someone to give instructions to the container based on the live traffic
 - E.g. a manager at a company who handles different teams and instructs each team what should they work on i.e. distributes work to the corresponding teams for a better productivity and manages us
 - Similarly we need some orchestration tool to monitor the containers or give instructions at runtime based on the live traffic
@@ -40,15 +42,21 @@
 ## Kubernetes installation
 
 - Kubernetes is a cluster and offers PaaS (Platform as a Service) model
+- Kubernetes is a cloud agnostic service i.e. it can be used on any cloud platform, on-prem etc
 - Every clustering solution has a Master and Worker nodes
   - Master node: Assign instructions to worker nodes
   - Worker nodes: Performs task based on the instructions from Master
 - If there are no worker nodes, Master node needs to perform all the tasks
+- In production grade or high-end application, we have more than one replica of master node (control plane). Usually 3 is a good number
 - **Minikube**: Installing all the Master and worker components within **one** server
 - But this minikube is only for learning purpose and not production ready
 - Manifest files are written in yaml and is a way to inform K8s to run the image
 - `kubectl` is the command line that connects with the Kubernetes cluster and pushes the manifest files
+- We pass on the manifest file to control plane and it will ask its worker to perform the task
+- We only talk to control through the API to the control plane and don't talk to the worker nodes directly
+- Everything will only happen on the worker nodes
 - K8 cluster pulls the images from Dockerhub and creates containers which are referred as **Pods** in Kubernetes
+- A pod is the smallest unit in K8s
 - If Minikube is successfully installed, a file with name **kubeconfig** will be created in our home directory
 - We should create a directory called `.kube` and copy `kubeconfig` file as `config` to `.kube` directory
 - After that if we run `kubectl get nodes` command, we should see a node listed in the output

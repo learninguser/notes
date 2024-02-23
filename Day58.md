@@ -1,8 +1,11 @@
 # Kubernetes
 
+Date: 07-11-2023
+
 ## Provisioning EKS on AWS
 
-- **eksctl** is a command line tool from AWS
+- For that, we need a tool from AWS i.e. **eksctl** which is a command line tool
+- When we push the manifest files from Workstation to EKS cluster, a node group called for e.g. SpotNG will contain list of servers that will pull the image from Dockerhub
 - First we should create an EKS cluster
   - For this, we provision a t2.micro instance with in the default VPC, 30GB of EBS volume and call it as workstation
   - With in the workstation, we install `kubectl`, `eksctl`, `docker` and `kubens`
@@ -14,6 +17,7 @@
 - EKS: Elastic Kubernetes Service from AWS
 - We **cannot** have SSH access to the master node and it is managed by AWS itself
 - `eksctl` is a simple way to provision an EKS clutser on AWS
+- Sample example configs to provision EKS cluster using eksctl can be found [here](https://github.com/eksctl-io/eksctl/tree/main/examples)
 - Along with it, we have `eks.yaml` file in which we specify the configuration we would like to have
 
   `eks.yaml`
@@ -43,12 +47,12 @@
 - By default the EKS cluster is provisioned in the Default VPC
 - We should generate a keypair with the name kubernetes using `ssh-keygen -f kubernetes` and import the public key on to AWS
 - Once everything is ready, then we should run: `eksctl create cluster --config-file=eks.yaml`
-- This will take around 15-20 mins of time to provision
+- This will take around **15-20** mins of time to provision
 - Once the EKS cluster is successfully provisioned, we can run `kubectl get nodes` command
 
 ## Node port
 
-- To create and attach NodePort service to a pod, we just need to set `type` to `NodePort`
+- To create and attach NodePort service to a pod, we just need to set `type` to `NodePort` under `spec`
 
   `services/02-nodeport.yaml`
 
@@ -91,7 +95,7 @@
 - To view all the services: `kubectl get service` or `kubectl get svc`
 - Once the service is successfully created, a cluster IP is allocated and random port is also exposed
 - A port number in the ephemeral range (30000 - 32767) at random (it will be same for all the nodes) is choosen by K8s on each and every node
-- In addition to that a security group is also created for all the nodes that in the cluster by EKS on its own
+- In addition to that a **security group** is also created for all the nodes that in the cluster by EKS on its own
 - We should allow the port in the security group that has **remoteAccess** in its name
 - Once the port is enabled, we will be able to access the application that is running on the pod using: `<Node-public-ip>:<random-port-number-assigned-by-EKS>`
 - **Cluster IP is a subset of Node port** i.e. when we provision a node port service, a cluster IP service is also provisioned in the background
@@ -120,6 +124,7 @@
 ## Loadbalancer
 
 - This service works only for cloud based K8s clusters
+- By setting type to LoadBalancer, a loadbalancer service is provisioned
 - Similar to Node Port, Load Balancer is created, a random ephemeral port is exposed and cluster IP is also present
 - In Node Port, we need to expose the ports on our own for all the nodes that are part of the cluster group
 - Also each node has unique public IP linked to it.
@@ -183,7 +188,7 @@
 ### 1. Replica set
 
 - Suppose if the traffic is very high, we need to change the name of the pod manually and provision it manually which is a painful process
-- Instead we can handover this job to K8s and it provisions the pods on our behalf
+- Instead we can handover this job to K8s using ReplicaSet and it provisions the pods on our behalf
 
   `sets/01-replicaset.yaml`
 
@@ -205,7 +210,7 @@
         environment: dev
     template: # this one is nothing but pod definition.
       metadata:
-        labels: #these are the pod labels.
+        labels: # these are the pod labels.
           app: nginx
           tier: frontend
           environment: dev
@@ -215,8 +220,10 @@
           image: nginx:1.14.2
   ```
 
+- ReplicaSet is present in `apps/v1` resource type. Therefore, we set `apiVersion` to `apps/v1`
 - `kubectl get rs` to check the status of the replicasets
-- **If there is an update in the image, it will not update the exisiting pods in the replicaset**
+- A replicaset creates pods internally
+- **If there is an update in the image, it will not update the exisiting pods in the replicaset** since its main purpose is to provide the no: of replicas mentioned in the manifest file
 - Therefore we go for **deployment set**
 
 ### 2. Deployment Set
@@ -253,9 +260,14 @@
           - containerPort: 80
   ```
 
-- When we create a Deployment, it creates a Replicaset with the deployment name - Random ID
-- Replicaset is a subset of deloyment
+- We can get all the deployments using: `kubectl get deploy`
+- When we create a Deployment, it creates a Replicaset with the `replicaSet_name-random_ID`
+- Deployment created another replicaset, therefore Replicaset is a subset of deployment
+- Therefore, when we check: `kubectl get rs` to get the list of ReplicaSets, we can see it has the name: `deployment_name-random_ID`
 - Using this, **we can acheive Zero Downtime** of our application
+
+### How does it achieve it?
+
 - When an update takes place, Deployment creates a new replicaset and uses the updated image when creating the pods
 - Once a pod is provisioned, it terminates the pod from previous replicaset that is outdated as it needs to maintain the number of replicas
 
