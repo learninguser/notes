@@ -12,6 +12,13 @@ Date: 07-11-2023
 - We have one master node that is present on EKS and group of worker nodes, we call the group as Spot NG
 - The OS that is present on Worker nodes is the choice of AWS. Therefore it chose AWS Linux 2 AMI
 - Using `kubens` we can select the K8s namespace
+- We can use the following commands to install **kubens**
+
+  ```bash
+  sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
+  sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+  ```
+
 - We can install all these components using the following script: `curl -O https://raw.githubusercontent.com/sivadevopsdaws74s/kubernetes-eksctl/master/workstation.sh` and use `sudo sh workstation.sh`
 - After that we need to configure our workstation instance with a CLI user that has admin rights inorder to provision EKS cluster on AWS
 - EKS: Elastic Kubernetes Service from AWS
@@ -48,7 +55,7 @@ Date: 07-11-2023
 - We should generate a keypair with the name kubernetes using `ssh-keygen -f kubernetes` and import the public key on to AWS
 - Once everything is ready, then we should run: `eksctl create cluster --config-file=eks.yaml`
 - This will take around **15-20** mins of time to provision
-- Once the EKS cluster is successfully provisioned, we can run `kubectl get nodes` command
+- Once the EKS cluster is successfully provisioned, we can run `kubectl get nodes` command on the workstation where eksctl is installeed
 
 ## Node port
 
@@ -273,6 +280,18 @@ Date: 07-11-2023
 
 ## Roboshop on EKS
 
+- Broadly there are 2 steps that are involved:
+  1. Image should exist i.e. build the image
+  2. Configure the image using manifest files
+
+### Common errors when implementing project with K8s
+
+1. Either image exists or not ?
+2. Is the image properly built ?
+3. Did we specify the version of the image correctly?
+4. Does the K8s cluster has access to pull the images from docker hub?
+5. If everything is proper, is the configuration information specified is correct or not?
+
 ### Setup flow
 
 1. Develop Dockerfiles and Manifest files locally and push them to GitHub
@@ -394,7 +413,10 @@ Date: 07-11-2023
 ### Catalogue
 
 - As we don't need to expose the catalogue port to external users, we can use **ClusterIP** service
-- We can define the environemnt variables using the **ConfigMap**, therefore removing it from the Dockerfile
+- When using Docker with K8s, we should avoid storing variables as environment variables at the docker image layer
+- Rather, we can define these environment variables using **ConfigMap**, therefore removing it from the Dockerfile
+- Whenever there is a change in the application code, only then we should go for CICD process
+- Therefore, we should maintain the configuration information outside the application code
 
   `catalogue/manifest.yaml`
 
@@ -450,7 +472,7 @@ Date: 07-11-2023
       tier: app
       project: roboshop
     ports:
-    - name: mongodb-port
+    - name: catalogue-port
       protocol: TCP
       port: 8080 # this port belongs to service
       targetPort: 8080 # this port belongs to container
@@ -463,6 +485,10 @@ Date: 07-11-2023
   kubectl get pods
   kubectl logs <Name-of-the-pod>
   ```
+
+- To debug the pods that are created, we can use a sample container with an image for e.g. almalinux that has basic commands such as telnet
+- There can also be a case where the pods are being created in a different node i.e. mongo in one node, catalogue in another node
+- Due to this, catalogue pod will not be able to communicate with the mongo pod
 
 ### Web Component
 

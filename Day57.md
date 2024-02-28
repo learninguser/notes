@@ -334,6 +334,7 @@ Date: 06-11-2023
   kind: Secret
   metadata:
     name: secret-basic-auth
+  type: Opaque # default
   data:
     username: c2l2YWt1bWFyCg==
     password: YWJjMTIzCg==
@@ -352,16 +353,17 @@ Date: 06-11-2023
   ```
 
 - Now that the pods are running, how can we allow users to access the application running inside the pod as we don't have any port mappings enabled ?
-- For this purpose, we can use **Services** in K8s i.e. we can we expose the deployed pods to the external users
+- For this purpose, we can use **Services** in K8s i.e. we can expose the deployed pods to the external users
 - The secrets information can be managed using the service available on the cloud platform
 - For e.g. SecretsManager on AWS can be used to manage these credentials
 
 ## K8s Services
 
 - There are 3 kinds of services
-  1. Cluster IP
-  2. NodePort
+  1. Cluster IP: Internal to Kubernetes
+  2. NodePort: Expose to outside world
   3. Load Balancer: Only for Cloud related kubernetes
+- **With service, we can create names as DNS records**
 - NodePort and LoadBalancer services are used to expose the application to external users
 - For NodePort service and Load Balancer service, minikube environment is not sufficient. We need to provision an actual K8s cluster
 
