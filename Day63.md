@@ -33,15 +33,15 @@
 
 ## Helm charts
 
-- So far in Docker and K8s:
-  1. Building and pushing the image
-  2. Manifest and how to run the image
+- So far with Docker and K8s:
+  1. Build and push the image
+  2. Configure the image through manifest files to run them inside pods
 - When ever there is new version, we can build and release the docker image using CI
 - But we need to edit and apply the manifest files manually i.e. enter the latest version information in it
 - Generally, we keep the important files aside and edit only required fields i.e. configuration information
 - To maintain DRY principle standards, we should be able to pass the required parameters to the function
 - To serve this purpose, we use Helm i.e.
-  1. Parameterise the K8s manifest files
+  1. Parameterise (i.e. templatise) the K8s manifest files
   2. Its the Kubernetes Package manager
 
 ### Installation of Helm
@@ -59,10 +59,23 @@
 ### 1. Parameterise the K8s manifest files
 
 - **Chart.yaml** is a mandatory file that we need to keep as its the metadata of the application
+
+  `Chart.yaml`
+
+  ```yaml
+  apiVersion: v1
+  name: nginx
+  version: 0.0.1 # this the chart version
+  description: this is the customised helm chart for nginx
+  appVersion: 1.0.1
+  ```
+
 - Next we should have directory named **templates** in which we place the manifest files e.g. deployment.yaml
-- To run the helm application: `helm install <release name> .` i.e. **.** indicates the location of Chart.yaml
-- For e.g. `helm install nginx .`
-- The next important file is: **values.yaml**
+- To run the helm application: `helm install <package-name> .` i.e. **.** indicates the location of Chart.yaml
+  - For e.g. `helm install nginx .`
+- To list all the packages installed: `helm list`
+- Helm in background looks for all the manifest files inside the templates folder and perform `kubectl apply` on them
+- The next important file is: **values.yaml** as this is the file where helm looks for the values for the variables
 
   `values.yaml`
 
@@ -125,14 +138,21 @@
   ```
 
 - Once the varaibles are configured, we can upgrade the pods: `helm upgrade nginx .`
-- How to rollback to previous version: `helm history nginx`, `helm rollback nginx`
+  - When performing an upgrade, it is ideal to increase the chart version number in the `Charts.yaml` file i.e. `version: 0.0.2`
+- To list all the revisions of a package for e.g. nginx: `helm history nginx`
+- How to rollback to previous version: `helm rollback nginx`
+  - To rollback to a specific version: `helm rollback nginx <version-number>`
 - To uninstall a chart: `helm delete nginx`
+- To show the list of parameter values: `helm show values .`
+- We can also set values using command line: `helm upgrade nginx --set deployment.replicaCount=3 .`
 
 ### 2. Kubernetes Package manager
 
+- Helm has some public repos to configure the image using manifest files
 - Steps involved:
-  1. Fetch image
-  2. Run manifest
+  1. Add helm repo using: `helm repo add <repo-name> <repo-url>`
+  2. Perform `helm repo update`
+  3. Install the application using: `helm upgrade` command
 - For e.g. if we want to install EKS EBS CSI drivers in K8s cluster:
 
   ```bash
@@ -142,3 +162,7 @@
     --namespace kube-system \
     aws-ebs-csi-driver/aws-ebs-csi-driver
   ```
+
+- To uninstall: `helm uninstall <repo-name>`
+  - For e.g. `helm uninstall aws-ebs-csi-driver --namespace kube-system` to uninstall aws-ebs-csi-driver
+- We search on this [URL](artifacthub.io) for the list of packages that are available and that can be installed using helm

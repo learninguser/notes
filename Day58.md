@@ -230,11 +230,11 @@ Date: 07-11-2023
 - ReplicaSet is present in `apps/v1` resource type. Therefore, we set `apiVersion` to `apps/v1`
 - `kubectl get rs` to check the status of the replicasets
 - A replicaset creates pods internally
-- **If there is an update in the image, it will not update the exisiting pods in the replicaset** since its main purpose is to provide the no: of replicas mentioned in the manifest file
-- Therefore we go for **deployment set**
 
 ### 2. Deployment Set
 
+- **If there is an update in the image, it will not update the exisiting pods in the replicaset** since its main purpose is to provide the no: of replicas mentioned in the manifest file
+- Therefore we go for **deployment set**
 - This is the most commonly used among others
 
   `sets/02-deployment.yaml`
