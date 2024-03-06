@@ -166,3 +166,73 @@
 - To uninstall: `helm uninstall <repo-name>`
   - For e.g. `helm uninstall aws-ebs-csi-driver --namespace kube-system` to uninstall aws-ebs-csi-driver
 - We search on this [URL](artifacthub.io) for the list of packages that are available and that can be installed using helm
+- When ever we get an error that **The connection to the server localhost:8080 was refused** on EKS when trying: `kubectl get nodes` in the workstation, we can use: `aws eks update-kubeconfig --region us-east-1 --name roboshop-cluster` to solve it
+
+### Redis as Helm package
+
+1. Chart.yaml
+2. values.yaml
+3. templates directory
+
+## K9s UI tool
+
+- It is a minimalistic terminal UI to manage and interact with the Kubernetes resources
+- To install: `sudo curl -sS https://webinstall.dev/k9s | bash`
+- To switch a resource, type: `shift + :` and then:
+  - type `service`: to list all the services
+  - type `pods`: to list all the pods in a namespace
+  - type `namespaces`: to list all the namespaces
+- To view the logs: select the resource and press `l`
+- To return from that: press `esc`
+- To describe a pod: press `d`
+- To delete: `ctrl + d`
+- To ignore any existing data, we can pass it as an argument to the pod
+  
+  ```yaml
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: mysql
+    namespace: roboshop
+    labels:
+      app: mysql
+      project: roboshop
+      tier: db
+  spec:
+    selector:
+      matchLabels:
+        app: mysql
+        project: roboshop
+        tier: db
+    serviceName: "mysql"
+    replicas: {{ .Values.statefulset.replicas }}
+    template:
+      metadata:
+        labels:
+          app: mysql
+          project: roboshop
+          tier: db
+      spec:
+        containers:
+        - name: mysql
+          image: "joindevops/mysql:{{ .Values.statefulset.imageVersion }}"
+          args:
+          - "--ignore-db-dir=lost+found"
+          envFrom:
+          - configMapRef:
+              name: mysql
+          - secretRef:
+              name: mysql
+          volumeMounts:
+          - name: mysql
+            mountPath: /var/lib/mysql
+    volumeClaimTemplates:
+    - metadata:
+        name: mysql
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "ebs-sc"
+        resources:
+          requests:
+            storage: 2Gi
+  ```
