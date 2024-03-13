@@ -309,32 +309,41 @@
 ### Control Plane components
 
 - It is the responsibility of the cloud vendors to manage the control plane
+- Kubectl: Its a command line tool to interact with the kubernetes cluster
 
-1. Kubectl: Its a command line tool to interact with the kubernetes cluster
-2. kube-apiserver: It exposes the K8s API and responds to the kubectl commands
+1. kube-apiserver: It exposes the K8s API and responds to the kubectl commands
       - When we issue `kubectl get pods` command, first `kubectl` communciates with the kube-apiserver
       - It will perform validation of the request i.e. performs authentication and authorisation as it is the **front-face** of a Kubernetes cluster
-3. kube-scheduler: Creation of resources is handled by Scheduler
+2. kube-scheduler: Creation of resources is handled by Scheduler
       - When we issue `kubectl apply -f mainfest.yaml`, the request is forwarded from apiserver to the scheduler
       - This decides and schedules the tasks in the worker nodes for the pods creation based on few factors
       - It also takes few factors into consideration such as node labels, selectors, taints and tolerations, affinity and non-affinity
-4. etcd:
-      - This stores entire data such as configmaps, secrets etc related to the K8s cluster
+3. etcd:
+      - This stores entire data such as configmaps, secrets etc related to the K8s cluster in the form of key-value
       - It is very crucial to store this data securely and if its lost, we can't retrive the information related to the resources that're provisioned by K8s
       - Therefore, we keep it outside K8s cluster i.e. use some external storage options such as EBS or EFS
       - Usually if we opt for cloud based K8s cluster, it is their responsibility to take regular backups of this database
-5. kube-control-manager:
+      - This doesn't store the application data
+4. kube-control-manager:
       - Its responsibility is to run different controller processes
       - There are different types controllers such as:
         - Node controller: It is responsible to inform the health of a node and act accordingly
         - Job controller: It controls the pod objects that runs a particular job and then exits
         - Replication controller: It monitors the requested no: of replicas are running properly all the time
+      - Detects if there are any cluster state changes such as crashing of pods etc
+      - When ever pod dies, the controller manager detects that and tries to recover the cluster state as soon as possible
+      - For that, it sends a request to the scheduler to reschedule those dead pods and it decides in which node to create them
+
+- In practice, K8s cluster is usually made up of multiple master nodes where each master node runs its own master processes where **api-server is load-balanced** and **etcd store** forms a distributed storage** across all master nodes
 
 ### Worker node components
 
-1. kubelet: It makes sure that the worker nodes are connected to the control plane
-2. kube-proxy: Its responsible to forward the request from services to the correct pods in the worker node
-3. Container runtime: Its a general runtime that can run any images into containers
+1. Container runtime: Its a general runtime that can run any images into containers
+2. kubelet:
+    - It makes sure that the worker nodes are connected to the control plane
+    - It also interacts with both the container and the node itself i.e. for assigning the resources from the node to the pod
+    - It starts the pod with a container inside after it gets a request from the scheduler
+3. kube-proxy: Its responsible to forward the request from services to the correct pods in the worker node
 
 ## Deployment strategies
 
